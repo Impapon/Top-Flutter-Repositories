@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:top_flutter_repositories_bs23_task/api_calls.dart';
+import 'package:top_flutter_repositories_bs23_task/models/repos_model.dart';
 
 class HomePage extends StatefulWidget {
   static const String routeName = '/';
@@ -10,7 +12,13 @@ class HomePage extends StatefulWidget {
 }
 
 class _HomePageState extends State<HomePage> {
-  final searchController = TextEditingController();
+  late Future<repo> futureRepo;
+
+  @override
+  void initState() {
+    super.initState();
+    futureRepo = fetchRepo();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -18,19 +26,33 @@ class _HomePageState extends State<HomePage> {
       appBar: AppBar(
         title: const Text("Home page"),
       ),
-      body: ListView(
-        children: [
-          ListTile(
-              title: TextField(
-                controller: searchController,
-                keyboardType: TextInputType.text,
-                decoration: const InputDecoration(
-                  labelText: "Filter Top repo..",
-                  prefixIcon: Icon(Icons.topic_outlined),
-                ),
-              ),
-              trailing: Icon(Icons.topic_outlined)),
-        ],
+      body: Center(
+        child: FutureBuilder<repo>(
+          future: futureRepo,
+          builder: (context, snapshot) {
+            if (snapshot.hasData) {
+              final model = snapshot.data;
+              return ListView.builder(
+                  itemCount: model!.items!.length,
+                  itemBuilder: (context, index) => Card(
+                    elevation: 5,
+
+                        child: Column(
+                          mainAxisAlignment: MainAxisAlignment.start,
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(model.items![index].name!),
+                            Text(model.items![index].htmlUrl!),
+                            Text(model.items![index].description!),
+                          ],
+                        ),
+                      ));
+            } else if (snapshot.hasError) {
+              return Text("${snapshot.error}");
+            }
+            return CircularProgressIndicator();
+          },
+        ),
       ),
     );
   }
